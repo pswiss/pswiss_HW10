@@ -23,9 +23,14 @@ char maxNum = 100+1;
 
 char message[messageLen];
 
+// Filter Variables
 short MAFarray[]={0,0,0,0};
 char iMAF = 0;
 float MAFval = 0;
+
+float IIRval = 0;
+float IIR_a = 0.8;
+float IIR_b = 0.2;
 
 
 // Definitions to make life easier
@@ -796,6 +801,8 @@ void APP_Tasks(void) {
                 short accelY        = (data[11] << 8)   | data[10];
                 short accelZ        = (data[13] << 8)   | data[12];
                 
+                
+                // Compute Moving average filter
                 iMAF++;
                 if(iMAF >= MAFsize)
                 {
@@ -809,8 +816,11 @@ void APP_Tasks(void) {
                     sum = sum+MAFarray[k];
                 }
                 MAFval = 1.00*((float)sum)/MAFsize;
+                
+                // Compute IIR filter
+                IIRval = IIR_a*IIRval + IIR_b*accelZ;
                      
-                len = sprintf(dataOut, "%d %d %f  \r\n", i,accelZ, MAFval);
+                len = sprintf(dataOut, "%d %d %5.2f %5.2f  \r\n", i,accelZ, MAFval, IIRval);
             }
 
             if (appData.isReadComplete) {
