@@ -13,7 +13,7 @@
 #include"I2C2_Commands.h"
 
 #define messageLen 100
-#define MAFsize 4
+
 #define CS LATBbits.LATB7       // chip select pin
 
 // Global Variables
@@ -24,6 +24,7 @@ char maxNum = 100+1;
 char message[messageLen];
 
 // Filter Variables
+#define MAFsize 4
 short MAFarray[]={0,0,0,0};
 char iMAF = 0;
 float MAFval = 0;
@@ -31,6 +32,14 @@ float MAFval = 0;
 float IIRval = 0;
 float IIR_a = 0.8;
 float IIR_b = 0.2;
+
+//float FIRweights[] = {0.0246, 0.2344, 0.4821, 0.4821, 0.2344, 0.0246};
+// 3-size array, .25 of nyquist low-pass
+#define FIRsize 4
+float FIRval = 0;
+float FIRweights[] = {0.0386, 0.4614, 0.4614, 0.0386};
+short FIRarray[] = {0, 0, 0, 0};
+char iFIR = 0;
 
 
 // Definitions to make life easier
@@ -803,10 +812,10 @@ void APP_Tasks(void) {
                 
                 
                 // Compute Moving average filter
-                iMAF++;
+                iMAF++; // Increment index variable
                 if(iMAF >= MAFsize)
                 {
-                    iMAF = 0;
+                    iMAF = 0; // Reset if needed
                 }
                 MAFarray[iMAF] = accelZ;
                 int k;
@@ -819,8 +828,20 @@ void APP_Tasks(void) {
                 
                 // Compute IIR filter
                 IIRval = IIR_a*IIRval + IIR_b*accelZ;
+                
+                // Compute FIR filter
+                for(k=(FIRsize-2);k>0;k--)
+                {
+                    FIRarray[k+1] = FIRarray[k];// Shift variables into new position
+                }
+                FIRarray[0] = accelZ;// Load new variable
+                FIRval = 0;
+                for(k = 0; k<FIRsize ; k++)
+                {
+                    FIRval = FIRval + FIRarray[k]*FIRweights[k];
+                }
                      
-                len = sprintf(dataOut, "%d %d %5.2f %5.2f  \r\n", i,accelZ, MAFval, IIRval);
+                len = sprintf(dataOut, "%d; %d; %5.2f; %5.2f; %5.2f  \r\n", i,accelZ, MAFval, IIRval, FIRval);
             }
 
             if (appData.isReadComplete) {
