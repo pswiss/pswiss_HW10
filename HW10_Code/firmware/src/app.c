@@ -24,8 +24,8 @@ char maxNum = 100+1;
 char message[messageLen];
 
 // Filter Variables
-#define MAFsize 4
-short MAFarray[]={0,0,0,0};
+#define MAFsize 6
+short MAFarray[]={0,0,0,0,0,0};
 char iMAF = 0;
 float MAFval = 0;
 
@@ -34,11 +34,12 @@ float IIR_a = 0.8;
 float IIR_b = 0.2;
 
 //float FIRweights[] = {0.0246, 0.2344, 0.4821, 0.4821, 0.2344, 0.0246};
-// 3-size array, .25 of nyquist low-pass
-#define FIRsize 4
+// 8-size array, .25 of nyquist low-pass
+#define FIRsize 8
 float FIRval = 0;
-float FIRweights[] = {0.0386, 0.4614, 0.4614, 0.0386};
-short FIRarray[] = {0, 0, 0, 0};
+float FIRweights[] = {0, 0.0191, 0.1019, 0.2309, 0.2963, 0.2309, 0.1019, 0.0191, 0};
+//float FIRweights[] = {0.0386, 0.4614, 0.4614, 0.0386};
+short FIRarray[] = {0, 0, 0, 0,0,0,0,0};
 char iFIR = 0;
 
 
@@ -830,7 +831,7 @@ void APP_Tasks(void) {
                 IIRval = IIR_a*IIRval + IIR_b*accelZ;
                 
                 // Compute FIR filter
-                for(k=(FIRsize-2);k>0;k--)
+                for(k=(FIRsize-1);k>=0;k--)
                 {
                     FIRarray[k+1] = FIRarray[k];// Shift variables into new position
                 }
